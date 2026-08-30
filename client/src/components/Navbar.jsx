@@ -7,7 +7,7 @@ const Navbar = () => {
 
     
   return (
-      <div className='w-full bg-amber-100'>
+      <div className='w-full bg-amber-100 sticky top-0 z-50'>
           
           <div className='w-full px-6 sm:px-8 h-16 flex items-center justify-between min-w-0'>
               

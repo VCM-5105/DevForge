@@ -1,16 +1,18 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import heroBg from "../assets/hero_backgroundImg.jpg"
+import FeatureCard from '../components/FeatureCard'
 
 const Home = () => {
   return (
-    <div className="relative min-h-[calc(100vh-64px)] w-full flex items-center justify-center bg-cover bg-center bg-no-repeat"
+      <>
+          <div className="relative min-h-[calc(100vh-64px)] w-full flex items-center justify-center bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${heroBg})` }}>
       
           <div className='absolute inset-0 bg-black/60'></div> 
 
           <div className="relative z-10 max-w-3xl mx-auto px-6 text-center flex flex-col items-center">
-            <span className="text-amber-300 font-semibold tracking-widest text-l uppercase mb-3">
+            <span className="text-amber-300 font-semibold tracking-widest text-lg uppercase mb-3">
           DevForge
               </span>
               
@@ -38,7 +40,36 @@ const Home = () => {
           </Link>
         </div>
           </div>
-    </div>
+          </div>
+          
+          <div id="features" className='max-w-6xl mx-auto px-6 py-20'>
+              <h1 className='text-3xl sm:text-4xl font-bold text-gray-900 text-center'>Everything you need to grow</h1>
+              <p className='mt-4 text-gray-600 text-center max-w-2xl mx-auto'>Organize your development journey and keep everything you need in one place.</p>
+
+              <div className='mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
+                  <FeatureCard
+                      icon="#"
+                      title="Coding Problem"
+                      description="Track your coding problems, solutions, difficulty and progress."
+                  />
+                  <FeatureCard
+                      icon="$"
+                      title="Goals"
+                      description="Set development goals and keep track of your progress."
+                  />
+                  <FeatureCard
+                      icon="&"
+                      title="Projects"
+                      description="Organize your projects, GitHub links, status and progress."
+                  />
+                  <FeatureCard
+                      icon="@"
+                      title="Notes"
+                      description="Save useful tutorials, documentation, links and learning resources."
+                  />
+              </div>
+          </div>
+      </>
   )
 }
 
