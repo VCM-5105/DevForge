@@ -1,299 +1,185 @@
-import React, { useState } from 'react'
-import Sidebar from '../components/Sidebar'
-
-const INITIAL_PROJECTS = [
-  {
-    id: 1,
-    title: 'DevForge',
-    description: 'All-in-one developer productivity workspace and learning tracker.',
-    techStack: ['React', 'Node.js', 'Express', 'MongoDB', 'Tailwind'],
-    status: 'In Progress',
-    progress: 70,
-    githubUrl: 'https://github.com/example/devforge',
-    liveUrl: 'https://devforge.example.com'
-  },
-  {
-    id: 2,
-    title: 'CodeSync',
-    description: 'Real-time collaborative code editor with syntax highlighting and chat.',
-    techStack: ['React', 'Socket.io', 'Node.js', 'Tailwind'],
-    status: 'In Progress',
-    progress: 45,
-    githubUrl: 'https://github.com/example/codesync',
-    liveUrl: ''
-  },
-  {
-    id: 3,
-    title: 'AlgoVisualizer',
-    description: 'Interactive sorting and pathfinding algorithm visualizer in the browser.',
-    techStack: ['JavaScript', 'HTML5 Canvas', 'CSS3'],
-    status: 'Completed',
-    progress: 100,
-    githubUrl: 'https://github.com/example/algo-visualizer',
-    liveUrl: 'https://algoviz.example.com'
-  }
-]
+import React, { useState, useEffect } from "react";
+import Sidebar from "../components/Sidebar";
+import API from "../services/api";
 
 const Projects = () => {
-  // 1. State Management
-  const [projects, setProjects] = useState(INITIAL_PROJECTS)
-  const [filter, setFilter] = useState('All') // 'All', 'In Progress', 'Completed'
-  const [showAddModal, setShowAddModal] = useState(false)
-
-  // 2. Form state for new project
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [newProject, setNewProject] = useState({
-    title: '',
-    description: '',
-    techStack: '',
-    status: 'In Progress',
-    progress: 50,
-    githubUrl: '',
-    liveUrl: ''
-  })
+    title: "",
+    techStack: "React, Express, MongoDB",
+    status: "In Progress",
+    github: "",
+    liveUrl: "",
+    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Developer project built with modern web technologies.",
+  });
 
-  // Handle form field changes
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setNewProject((prev) => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
-  // Handle adding a new project
-  const handleAddSubmit = (e) => {
-    e.preventDefault()
-    if (!newProject.title.trim()) return
-
-    const createdProject = {
-      id: Date.now(),
-      title: newProject.title,
-      description: newProject.description,
-      // Convert comma-separated string to an array of tags
-      techStack: newProject.techStack
-        ? newProject.techStack.split(',').map((item) => item.trim()).filter(Boolean)
-        : ['React'],
-      status: newProject.status,
-      progress: Number(newProject.progress) || 0,
-      githubUrl: newProject.githubUrl,
-      liveUrl: newProject.liveUrl
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const response = await API.get("/projects");
+      setProjects(response.data.data || []);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    setProjects((prev) => [createdProject, ...prev])
-    setNewProject({
-      title: '',
-      description: '',
-      techStack: '',
-      status: 'In Progress',
-      progress: 50,
-      githubUrl: '',
-      liveUrl: ''
-    })
-    setShowAddModal(false)
-  }
+  useEffect(() => {
+    fetchProjects();
+  }, []);
 
-  // Handle deleting a project
-  const handleDelete = (id) => {
-    setProjects((prev) => prev.filter((project) => project.id !== id))
-  }
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    if (!newProject.title) return;
 
-  // Filter pipeline
-  const filteredProjects = projects.filter((project) => {
-    if (filter === 'All') return true
-    return project.status === filter
-  })
+    try {
+      await API.post("/projects", newProject);
+      fetchProjects();
+      setNewProject({
+        title: "",
+        techStack: "React, Express, MongoDB",
+        status: "In Progress",
+        github: "",
+        liveUrl: "",
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Developer project built with modern web technologies.",
+      });
+      setShowAddModal(false);
+    } catch (error) {
+      console.error("Error adding project:", error);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await API.delete(`/projects/${id}`);
+      setProjects((prev) => prev.filter((p) => p._id !== id));
+    } catch (error) {
+      console.error("Error deleting project:", error);
+    }
+  };
 
   return (
-    <div className="flex min-h-[calc(100vh-64px)] bg-gray-50">
-      {/* Sidebar Navigation */}
+    <div className="flex min-h-[calc(100vh-80px)] bg-gray-50">
       <div className="hidden md:block">
         <Sidebar />
       </div>
 
-      {/* Main Content */}
       <main className="flex-1 p-6 md:p-10 max-w-6xl">
-        
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Manage your applications, repositories, and build progress.
+            <h1 className="text-2xl font-bold text-gray-900">Projects Showcase</h1>
+            <p className="text-xs text-gray-500 mt-1">
+              Maintain your personal software engineering projects and repositories.
             </p>
           </div>
 
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 bg-black hover:bg-gray-800 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
+            className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors"
           >
             + Add Project
           </button>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex gap-2 border-b border-gray-200 pb-3 mb-6">
-          {['All', 'In Progress', 'Completed'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setFilter(tab)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-                filter === tab
-                  ? 'bg-black text-white'
-                  : 'text-gray-600 hover:bg-gray-200/60'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
         {/* Projects Grid */}
-        {filteredProjects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredProjects.map((project) => {
-              const isCompleted = project.status === 'Completed'
-
-              return (
-                <div
-                  key={project.id}
-                  className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm flex flex-col justify-between"
-                >
-                  <div>
-                    {/* Status & Delete */}
-                    <div className="flex justify-between items-center mb-2.5">
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded font-medium ${
-                          isCompleted
-                            ? 'bg-green-50 text-green-700'
-                            : 'bg-amber-50 text-amber-700'
-                        }`}
-                      >
-                        {project.status}
-                      </span>
-
-                      <button
-                        onClick={() => handleDelete(project.id)}
-                        className="text-xs text-gray-400 hover:text-red-600 font-medium transition-colors"
-                      >
-                        Delete
-                      </button>
-                    </div>
-
-                    {/* Title & Description */}
-                    <h3 className="text-lg font-bold text-gray-900">
+        {loading ? (
+          <div className="text-center py-12 text-gray-400 text-xs">
+            Loading projects...
+          </div>
+        ) : projects.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {projects.map((project) => (
+              <div
+                key={project._id}
+                className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-gray-900 text-base">
                       {project.title}
                     </h3>
-                    <p className="text-sm text-gray-500 mt-1 line-clamp-2 leading-relaxed">
-                      {project.description}
-                    </p>
-
-                    {/* Tech Stack Badges */}
-                    <div className="flex flex-wrap gap-1.5 mt-4">
-                      {project.techStack.map((tech, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded font-medium"
-                        >
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-medium">
+                      {project.status}
+                    </span>
                   </div>
 
-                  {/* Progress & External Links */}
-                  <div className="mt-6 pt-4 border-t border-gray-100">
-                    <div className="flex justify-between text-xs font-medium text-gray-600 mb-1.5">
-                      <span>Progress</span>
-                      <span className="font-bold text-gray-900">{project.progress}%</span>
-                    </div>
+                  <p className="text-xs text-gray-600 my-3 leading-relaxed">
+                    {project.description || "Lorem ipsum dolor sit amet, consectetur adipiscing elit."}
+                  </p>
 
-                    {/* Progress Bar */}
-                    <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden mb-4">
-                      <div
-                        className={`h-full transition-all duration-300 ${
-                          isCompleted ? 'bg-green-500' : 'bg-black'
-                        }`}
-                        style={{ width: `${project.progress}%` }}
-                      ></div>
-                    </div>
-
-                    {/* Action Links */}
-                    <div className="flex items-center gap-3 pt-1">
-                      {project.githubUrl && (
-                        <a
-                          href={project.githubUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs font-semibold text-gray-900 hover:underline flex items-center gap-1"
-                        >
-                          GitHub ↗
-                        </a>
-                      )}
-                      {project.liveUrl && (
-                        <a
-                          href={project.liveUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1"
-                        >
-                          Live Demo ↗
-                        </a>
-                      )}
-                      {!project.githubUrl && !project.liveUrl && (
-                        <span className="text-xs text-gray-400">No links attached</span>
-                      )}
-                    </div>
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {(project.techStack || []).map((tech, idx) => (
+                      <span
+                        key={idx}
+                        className="text-[10px] bg-gray-100 text-gray-700 px-2 py-0.5 rounded font-mono"
+                      >
+                        {tech}
+                      </span>
+                    ))}
                   </div>
                 </div>
-              )
-            })}
+
+                <div className="pt-3 border-t border-gray-100 flex justify-between items-center text-xs">
+                  <div className="flex gap-3">
+                    {project.github && (
+                      <a
+                        href={project.github}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-gray-600 hover:text-black font-medium"
+                      >
+                        GitHub ↗
+                      </a>
+                    )}
+                    {project.liveUrl && (
+                      <a
+                        href={project.liveUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-amber-600 hover:text-amber-800 font-medium"
+                      >
+                        Live Demo ↗
+                      </a>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleDelete(project._id)}
+                    className="text-red-600 hover:text-red-800 font-medium"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
-          /* Empty State */
-          <div className="bg-white border border-gray-200 rounded-lg p-10 text-center">
-            <p className="text-gray-500 text-sm font-medium">No projects found in this category.</p>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="mt-3 text-xs font-semibold text-black underline"
-            >
-              Add a new project
-            </button>
+          <div className="bg-white border border-gray-200 rounded-xl p-8 text-center text-gray-400 text-xs">
+            No projects added yet. Click "+ Add Project" to feature your work!
           </div>
         )}
 
-        {/* Add Project Modal */}
+        {/* Modal */}
         {showAddModal && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-lg border border-gray-200">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Add New Project</h2>
-
-              <form onSubmit={handleAddSubmit} className="space-y-3.5">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-lg border border-gray-200">
+              <h2 className="text-base font-bold text-gray-900 mb-4">Add Project</h2>
+              <form onSubmit={handleAddSubmit} className="space-y-3">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Project Name
+                    Project Title
                   </label>
                   <input
                     type="text"
-                    name="title"
                     required
-                    placeholder="e.g. DevForge"
+                    placeholder="e.g. DevForge Workspace App"
                     value={newProject.title}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Short Description
-                  </label>
-                  <textarea
-                    name="description"
-                    rows="2"
-                    placeholder="What does this project do?"
-                    value={newProject.description}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black resize-none"
+                    onChange={(e) =>
+                      setNewProject({ ...newProject, title: e.target.value })
+                    }
+                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black"
                   />
                 </div>
 
@@ -303,86 +189,71 @@ const Projects = () => {
                   </label>
                   <input
                     type="text"
-                    name="techStack"
-                    placeholder="React, Node.js, MongoDB"
+                    placeholder="React, Node, Express, MongoDB"
                     value={newProject.techStack}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"
+                    onChange={(e) =>
+                      setNewProject({ ...newProject, techStack: e.target.value })
+                    }
+                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      Status
+                      GitHub URL
                     </label>
-                    <select
-                      name="status"
-                      value={newProject.status}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-black"
-                    >
-                      <option value="In Progress">In Progress</option>
-                      <option value="Completed">Completed</option>
-                      <option value="Planned">Planned</option>
-                    </select>
+                    <input
+                      type="url"
+                      value={newProject.github}
+                      onChange={(e) =>
+                        setNewProject({ ...newProject, github: e.target.value })
+                      }
+                      className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black"
+                    />
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      Progress ({newProject.progress}%)
+                      Live URL
                     </label>
                     <input
-                      type="range"
-                      name="progress"
-                      min="0"
-                      max="100"
-                      value={newProject.progress}
-                      onChange={handleChange}
-                      className="w-full h-8 cursor-pointer accent-black"
+                      type="url"
+                      placeholder=""
+                      value={newProject.liveUrl}
+                      onChange={(e) =>
+                        setNewProject({ ...newProject, liveUrl: e.target.value })
+                      }
+                      className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black"
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    GitHub URL (optional)
+                    Description
                   </label>
-                  <input
-                    type="url"
-                    name="githubUrl"
-                    placeholder="https://github.com/..."
-                    value={newProject.githubUrl}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"
-                  />
+                  <textarea
+                    rows="3"
+                    value={newProject.description}
+                    onChange={(e) =>
+                      setNewProject({ ...newProject, description: e.target.value })
+                    }
+                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black"
+                  ></textarea>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Live Demo URL (optional)
-                  </label>
-                  <input
-                    type="url"
-                    name="liveUrl"
-                    placeholder="https://..."
-                    value={newProject.liveUrl}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2 mt-6 pt-2">
+                <div className="flex justify-end gap-2 pt-4">
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md"
+                    className="px-3.5 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-black text-white text-sm font-semibold rounded-md hover:bg-gray-800"
+                    className="px-3.5 py-1.5 bg-neutral-900 text-white text-xs font-semibold rounded-lg hover:bg-neutral-800"
                   >
                     Save Project
                   </button>
@@ -391,10 +262,9 @@ const Projects = () => {
             </div>
           </div>
         )}
-
       </main>
     </div>
-  )
-}
+  );
+};
 
-export default Projects
+export default Projects;

@@ -10,7 +10,6 @@ import { protect } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-// Apply auth middleware to all problem routes
 router.use(protect);
 
 router.route("/").get(getProblems).post(createProblem);

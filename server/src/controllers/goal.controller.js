@@ -1,10 +1,5 @@
 import Goal from "../models/goal.model.js";
 
-/**
- * @desc    Create a new learning/dev goal
- * @route   POST /api/goals
- * @access  Private
- */
 export const createGoal = async (req, res) => {
   try {
     const { title, target, current, deadline, status } = req.body;
@@ -39,11 +34,6 @@ export const createGoal = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get all goals for logged-in user
- * @route   GET /api/goals
- * @access  Private
- */
 export const getGoals = async (req, res) => {
   try {
     const goals = await Goal.find({ user: req.user._id }).sort({
@@ -64,11 +54,7 @@ export const getGoals = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get goal by ID
- * @route   GET /api/goals/:id
- * @access  Private
- */
+
 export const getGoalById = async (req, res) => {
   try {
     const goal = await Goal.findOne({
@@ -96,11 +82,6 @@ export const getGoalById = async (req, res) => {
   }
 };
 
-/**
- * @desc    Update goal
- * @route   PUT /api/goals/:id
- * @access  Private
- */
 export const updateGoal = async (req, res) => {
   try {
     let goal = await Goal.findOne({
@@ -134,11 +115,6 @@ export const updateGoal = async (req, res) => {
   }
 };
 
-/**
- * @desc    Delete goal
- * @route   DELETE /api/goals/:id
- * @access  Private
- */
 export const deleteGoal = async (req, res) => {
   try {
     const goal = await Goal.findOneAndDelete({

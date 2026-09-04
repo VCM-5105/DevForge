@@ -1,10 +1,5 @@
 import Project from "../models/project.model.js";
 
-/**
- * @desc    Create a new project
- * @route   POST /api/projects
- * @access  Private
- */
 export const createProject = async (req, res) => {
   try {
     const { title, techStack, status, github, liveUrl, description } = req.body;
@@ -43,12 +38,6 @@ export const createProject = async (req, res) => {
     });
   }
 };
-
-/**
- * @desc    Get all projects for logged-in user
- * @route   GET /api/projects
- * @access  Private
- */
 export const getProjects = async (req, res) => {
   try {
     const projects = await Project.find({ user: req.user._id }).sort({
@@ -69,11 +58,6 @@ export const getProjects = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get single project by ID
- * @route   GET /api/projects/:id
- * @access  Private
- */
 export const getProjectById = async (req, res) => {
   try {
     const project = await Project.findOne({
@@ -100,12 +84,6 @@ export const getProjectById = async (req, res) => {
     });
   }
 };
-
-/**
- * @desc    Update project
- * @route   PUT /api/projects/:id
- * @access  Private
- */
 export const updateProject = async (req, res) => {
   try {
     let project = await Project.findOne({
@@ -143,11 +121,6 @@ export const updateProject = async (req, res) => {
   }
 };
 
-/**
- * @desc    Delete project
- * @route   DELETE /api/projects/:id
- * @access  Private
- */
 export const deleteProject = async (req, res) => {
   try {
     const project = await Project.findOneAndDelete({

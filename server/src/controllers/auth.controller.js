@@ -152,11 +152,7 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
-/**
- * @desc    Update user profile & avatar
- * @route   PUT /api/auth/profile
- * @access  Private
- */
+
 export const updateUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -168,13 +164,13 @@ export const updateUserProfile = async (req, res) => {
       });
     }
 
-    // Update fields if provided
+   
     user.name = req.body.name || user.name;
     user.bio = req.body.bio !== undefined ? req.body.bio : user.bio;
     user.github = req.body.github !== undefined ? req.body.github : user.github;
     user.linkedin = req.body.linkedin !== undefined ? req.body.linkedin : user.linkedin;
 
-    // Handle skills array (can be sent as JSON string or array)
+    
     if (req.body.skills) {
       if (typeof req.body.skills === "string") {
         user.skills = req.body.skills.split(",").map((s) => s.trim());
@@ -183,12 +179,9 @@ export const updateUserProfile = async (req, res) => {
       }
     }
 
-    // If user uploaded a new avatar file via Multer
     if (req.file) {
       user.avatar = `/uploads/${req.file.filename}`;
     }
-
-    // If password update is requested
     if (req.body.password) {
       user.password = req.body.password;
     }

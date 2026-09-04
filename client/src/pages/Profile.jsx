@@ -1,174 +1,156 @@
-import React, { useState } from 'react'
-import Sidebar from '../components/Sidebar'
-
-const INITIAL_PROFILE = {
-  name: 'Alex Doe',
-  email: 'alex.doe@example.com',
-  bio: 'Full-stack developer passionate about React, Node.js, and building clean developer tools.',
-  skills: 'React, Node.js, Express, MongoDB, Tailwind CSS, JavaScript',
-  github: 'https://github.com/alexdoe',
-  linkedin: 'https://linkedin.com/in/alexdoe'
-}
+import React, { useState, useEffect } from "react";
+import Sidebar from "../components/Sidebar";
+import API from "../services/api";
+import { useAuth } from "../hooks/useAuth";
 
 const Profile = () => {
-  // Profile view data state
-  const [profile, setProfile] = useState(INITIAL_PROFILE)
+  const { user, updateUserData } = useAuth();
+  const [profileData, setProfileData] = useState({
+    name: "",
+    email: "",
+    bio: "",
+    skills: "",
+    github: "",
+    linkedin: "",
+    avatar: "",
+  });
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
 
-  // Edit mode toggle
-  const [isEditing, setIsEditing] = useState(false)
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        const response = await API.get("/auth/profile");
+        const data = response.data.data;
+        setProfileData({
+          name: data.name || "",
+          email: data.email || "",
+          bio: data.bio || "Lorem ipsum dolor sit amet, full-stack developer passionate about building web apps.",
+          skills: Array.isArray(data.skills) ? data.skills.join(", ") : data.skills || "React, Node.js, Express, MongoDB",
+          github: data.github || "",
+          linkedin: data.linkedin || "",
+          avatar: data.avatar || "",
+        });
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Form input state (isolated from display state until saved)
-  const [formData, setFormData] = useState(INITIAL_PROFILE)
+    fetchProfile();
+  }, []);
 
-  // Handle controlled input changes
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
+    const { name, value } = e.target;
+    setProfileData((prev) => ({
       ...prev,
-      [name]: value
-    }))
-  }
+      [name]: value,
+    }));
+  };
 
-  // Enter edit mode
-  const handleEditClick = () => {
-    setFormData(profile)
-    setIsEditing(true)
-  }
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setAvatarFile(e.target.files[0]);
+    }
+  };
 
-  // Cancel edit mode
-  const handleCancel = () => {
-    setFormData(profile)
-    setIsEditing(false)
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage("");
+    setSaving(true);
 
-  // Save changes to profile state
-  const handleSave = (e) => {
-    e.preventDefault()
-    setProfile(formData)
-    setIsEditing(false)
-  }
+    try {
+      const formData = new FormData();
+      formData.append("name", profileData.name);
+      formData.append("bio", profileData.bio);
+      formData.append("skills", profileData.skills);
+      formData.append("github", profileData.github);
+      formData.append("linkedin", profileData.linkedin);
 
-  // Helper to extract first name initial for the avatar
-  const getInitial = (name) => {
-    return name ? name.trim().charAt(0).toUpperCase() : 'U'
-  }
+      if (avatarFile) {
+        formData.append("avatar", avatarFile);
+      }
+
+      const response = await API.put("/auth/profile", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const updated = response.data.data;
+      updateUserData(updated);
+      setMessage("Profile updated successfully!");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      setMessage("Failed to update profile. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <div className="flex min-h-[calc(100vh-64px)] bg-gray-50">
-      {/* Sidebar */}
+    <div className="flex min-h-[calc(100vh-80px)] bg-gray-50">
       <div className="hidden md:block">
         <Sidebar />
       </div>
 
-      {/* Main Profile Container */}
       <main className="flex-1 p-6 md:p-10 max-w-4xl">
-        
-        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage your personal developer details and public links.
+          <h1 className="text-2xl font-bold text-gray-900">Developer Profile</h1>
+          <p className="text-xs text-gray-500 mt-1">
+            Manage your personal profile details, bio, links, and avatar image.
           </p>
         </div>
 
-        {/* Profile Card */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 shadow-sm">
-          
-          {!isEditing ? (
-            /* ================= VIEW MODE ================= */
-            <div className="space-y-6">
-              
-              {/* Avatar & Header Info */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-gray-100">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center text-2xl font-extrabold border border-amber-200">
-                    {getInitial(profile.name)}
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900">{profile.name}</h2>
-                    <p className="text-sm text-gray-500">{profile.email}</p>
-                  </div>
-                </div>
+        {message && (
+          <div
+            className={`mb-6 p-3 text-xs rounded-lg border ${
+              message.includes("success")
+                ? "bg-green-50 text-green-700 border-green-200"
+                : "bg-red-50 text-red-700 border-red-200"
+            }`}
+          >
+            {message}
+          </div>
+        )}
 
-                <button
-                  onClick={handleEditClick}
-                  className="px-4 py-2 bg-black hover:bg-gray-800 text-white text-xs font-semibold rounded-lg transition-colors"
-                >
-                  Edit Profile
-                </button>
-              </div>
-
-              {/* Bio Section */}
-              <div>
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                  About
-                </h3>
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  {profile.bio || 'No bio provided yet.'}
-                </p>
-              </div>
-
-              {/* Skills Tags */}
-              <div>
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                  Skills & Technologies
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {profile.skills
-                    ? profile.skills.split(',').map((skill, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2.5 py-1 bg-gray-100 text-gray-700 text-xs rounded-md font-medium"
-                        >
-                          {skill.trim()}
-                        </span>
-                      ))
-                    : <span className="text-xs text-gray-400">No skills listed</span>}
-                </div>
-              </div>
-
-              {/* Links Section */}
-              <div className="pt-4 border-t border-gray-100">
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                  Online Presence
-                </h3>
-                <div className="flex flex-col sm:flex-row gap-4 text-xs">
-                  {profile.github && (
-                    <a
-                      href={profile.github}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-semibold text-gray-900 hover:underline flex items-center gap-1"
-                    >
-                      GitHub Profile ↗
-                    </a>
-                  )}
-                  {profile.linkedin && (
-                    <a
-                      href={profile.linkedin}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-semibold text-blue-600 hover:underline flex items-center gap-1"
-                    >
-                      LinkedIn Profile ↗
-                    </a>
-                  )}
-                  {!profile.github && !profile.linkedin && (
-                    <span className="text-gray-400">No links connected</span>
-                  )}
-                </div>
-              </div>
-
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+          {loading ? (
+            <div className="text-center py-8 text-xs text-gray-400">
+              Loading profile
             </div>
           ) : (
-            /* ================= EDIT MODE ================= */
-            <form onSubmit={handleSave} className="space-y-4">
-              
-              <div className="flex justify-between items-center pb-4 border-b border-gray-100">
-                <h2 className="text-base font-bold text-gray-900">Edit Profile Details</h2>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="flex items-center gap-4 pb-6 border-b border-gray-100">
+                <div className="w-16 h-16 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center border border-gray-300 font-bold text-gray-500 text-xl">
+                  {profileData.avatar ? (
+                    <img
+                      src={`http://localhost:5000${profileData.avatar}`}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    profileData.name.charAt(0).toUpperCase() || "D"
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    Upload Profile Picture
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-neutral-900 file:text-white hover:file:bg-neutral-800"
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">
                     Full Name
@@ -176,40 +158,37 @@ const Profile = () => {
                   <input
                     type="text"
                     name="name"
-                    required
-                    value={formData.name}
+                    value={profileData.name}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"
+                    className="w-full px-3.5 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Email Address
+                    Email Address (Read-only)
                   </label>
                   <input
                     type="email"
-                    name="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"
+                    disabled
+                    value={profileData.email}
+                    className="w-full px-3.5 py-2 text-xs border border-gray-200 bg-gray-50 text-gray-500 rounded-lg cursor-not-allowed"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Bio
+                  Bio / Developer Tagline
                 </label>
                 <textarea
-                  name="bio"
                   rows="3"
-                  value={formData.bio}
+                  name="bio"
+                  value={profileData.bio}
                   onChange={handleChange}
-                  placeholder="Tell us about yourself..."
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black resize-none"
-                />
+                  placeholder="Lorem ipsum dolor sit amet, full-stack developer..."
+                  className="w-full px-3.5 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black"
+                ></textarea>
               </div>
 
               <div>
@@ -219,67 +198,58 @@ const Profile = () => {
                 <input
                   type="text"
                   name="skills"
-                  value={formData.skills}
+                  value={profileData.skills}
                   onChange={handleChange}
-                  placeholder="React, Node.js, TypeScript"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"
+                  placeholder="React, Node.js, Express, MongoDB, Tailwind"
+                  className="w-full px-3.5 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    GitHub Profile URL
+                    GitHub Profile Link
                   </label>
                   <input
                     type="url"
                     name="github"
-                    value={formData.github}
+                    value={profileData.github}
                     onChange={handleChange}
-                    placeholder="https://github.com/..."
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"
+                    placeholder="https://github.com/username"
+                    className="w-full px-3.5 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    LinkedIn Profile URL
+                    LinkedIn Profile Link
                   </label>
                   <input
                     type="url"
                     name="linkedin"
-                    value={formData.linkedin}
+                    value={profileData.linkedin}
                     onChange={handleChange}
-                    placeholder="https://linkedin.com/in/..."
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"
+                    placeholder="https://linkedin.com/in/username"
+                    className="w-full px-3.5 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t border-gray-100 mt-6">
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                >
-                  Cancel
-                </button>
+              <div className="pt-4 border-t border-gray-100 flex justify-end">
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-black hover:bg-gray-800 text-white text-xs font-semibold rounded-md transition-colors"
+                  disabled={saving}
+                  className="px-5 py-2 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-50"
                 >
-                  Save Changes
+                  {saving ? "Saving Changes..." : "Save Profile"}
                 </button>
               </div>
-
             </form>
           )}
-
         </div>
-
       </main>
     </div>
-  )
-}
+  );
+};
 
-export default Profile
+export default Profile;

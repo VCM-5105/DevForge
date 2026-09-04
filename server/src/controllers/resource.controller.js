@@ -1,10 +1,5 @@
 import Resource from "../models/resource.model.js";
 
-/**
- * @desc    Create a new saved resource
- * @route   POST /api/resources
- * @access  Private
- */
 export const createResource = async (req, res) => {
   try {
     const { title, type, url, category } = req.body;
@@ -38,11 +33,6 @@ export const createResource = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get all resources for logged-in user
- * @route   GET /api/resources
- * @access  Private
- */
 export const getResources = async (req, res) => {
   try {
     const resources = await Resource.find({ user: req.user._id }).sort({
@@ -63,11 +53,7 @@ export const getResources = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get resource by ID
- * @route   GET /api/resources/:id
- * @access  Private
- */
+
 export const getResourceById = async (req, res) => {
   try {
     const resource = await Resource.findOne({
@@ -95,11 +81,6 @@ export const getResourceById = async (req, res) => {
   }
 };
 
-/**
- * @desc    Update resource
- * @route   PUT /api/resources/:id
- * @access  Private
- */
 export const updateResource = async (req, res) => {
   try {
     let resource = await Resource.findOne({
@@ -133,11 +114,7 @@ export const updateResource = async (req, res) => {
   }
 };
 
-/**
- * @desc    Delete resource
- * @route   DELETE /api/resources/:id
- * @access  Private
- */
+
 export const deleteResource = async (req, res) => {
   try {
     const resource = await Resource.findOneAndDelete({

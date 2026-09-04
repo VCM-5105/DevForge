@@ -1,10 +1,5 @@
 import Note from "../models/note.model.js";
 
-/**
- * @desc    Create a new note
- * @route   POST /api/notes
- * @access  Private
- */
 export const createNote = async (req, res) => {
   try {
     const { title, content } = req.body;
@@ -35,12 +30,6 @@ export const createNote = async (req, res) => {
     });
   }
 };
-
-/**
- * @desc    Get all notes for logged-in user
- * @route   GET /api/notes
- * @access  Private
- */
 export const getNotes = async (req, res) => {
   try {
     const notes = await Note.find({ user: req.user._id }).sort({
@@ -61,11 +50,7 @@ export const getNotes = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get note by ID
- * @route   GET /api/notes/:id
- * @access  Private
- */
+
 export const getNoteById = async (req, res) => {
   try {
     const note = await Note.findOne({
@@ -93,11 +78,6 @@ export const getNoteById = async (req, res) => {
   }
 };
 
-/**
- * @desc    Update note
- * @route   PUT /api/notes/:id
- * @access  Private
- */
 export const updateNote = async (req, res) => {
   try {
     let note = await Note.findOne({
@@ -131,11 +111,7 @@ export const updateNote = async (req, res) => {
   }
 };
 
-/**
- * @desc    Delete note
- * @route   DELETE /api/notes/:id
- * @access  Private
- */
+
 export const deleteNote = async (req, res) => {
   try {
     const note = await Note.findOneAndDelete({

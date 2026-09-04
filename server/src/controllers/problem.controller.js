@@ -1,10 +1,5 @@
 import Problem from "../models/problem.model.js";
 
-/**
- * @desc    Create a new coding problem
- * @route   POST /api/problems
- * @access  Private
- */
 export const createProblem = async (req, res) => {
   try {
     const { title, difficulty, topic, platform, status, notes } = req.body;
@@ -17,7 +12,7 @@ export const createProblem = async (req, res) => {
     }
 
     const problem = await Problem.create({
-      user: req.user._id, // Attach logged-in user
+      user: req.user._id, 
       title,
       difficulty,
       topic,
@@ -40,11 +35,6 @@ export const createProblem = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get all problems for the logged-in user
- * @route   GET /api/problems
- * @access  Private
- */
 export const getProblems = async (req, res) => {
   try {
     // Return only problems belonging to req.user._id
@@ -66,11 +56,6 @@ export const getProblems = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get single problem by ID
- * @route   GET /api/problems/:id
- * @access  Private
- */
 export const getProblemById = async (req, res) => {
   try {
     const problem = await Problem.findOne({
@@ -98,11 +83,6 @@ export const getProblemById = async (req, res) => {
   }
 };
 
-/**
- * @desc    Update a coding problem
- * @route   PUT /api/problems/:id
- * @access  Private
- */
 export const updateProblem = async (req, res) => {
   try {
     let problem = await Problem.findOne({
@@ -136,11 +116,6 @@ export const updateProblem = async (req, res) => {
   }
 };
 
-/**
- * @desc    Delete a coding problem
- * @route   DELETE /api/problems/:id
- * @access  Private
- */
 export const deleteProblem = async (req, res) => {
   try {
     const problem = await Problem.findOneAndDelete({
